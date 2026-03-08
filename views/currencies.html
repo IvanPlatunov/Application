@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Валюты - {{ app.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">{{ app.name }}</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/">Главная</a>
+                <a class="nav-link active" href="/currencies">Валюты</a>
+                <a class="nav-link" href="/users">Пользователи</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-4">
+        <h1 class="mb-4">Список валют</h1>
+        
+        {% if currencies %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Код</th>
+                        <th>Курс (руб.)</th>
+                        <th>Номинал</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for currency in currencies %}
+                    <tr>
+                        <td><strong>{{ currency.char_code }}</strong></td>
+                        <td class="fw-bold">{{ "%.4f"|format(currency.value) }}</td>
+                        <td>{{ currency.nominal }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            <h4 class="alert-heading">Нет данных о валютах!</h4>
+            <p>Не удалось загрузить информацию о валютах. Пожалуйста, попробуйте позже.</p>
+        </div>
+        {% endif %}
+        
+        <div class="mt-4">
+            <a href="/" class="btn btn-outline-primary">← На главную</a>
+            <button class="btn btn-success float-end" onclick="updateCurrencies()">
+                Обновить курсы
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function updateCurrencies() {
+            fetch('/api/update_currencies', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Ошибка сервера: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Курсы валют успешно обновлены!');
+                    location.reload();
+                } else {
+                    alert('❌ Ошибка при обновлении курсов: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('❌ Ошибка при обновлении курсов: ' + error.message);
+            });
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
